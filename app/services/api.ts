@@ -1,6 +1,6 @@
 import { Transaction, CryptoRate, CryptoMarketCoin } from '../types/wallet';
 
-export const API_BASE_URL = "http://localhost:8000";
+export const API_BASE_URL = "https://fintech-1-xynq.onrender.com";
 
 class ApiClient {
   private baseUrl: string = API_BASE_URL;
