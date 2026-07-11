@@ -213,7 +213,7 @@ export default function MobileHomeScreen() {
   ];
 
   return (
-    <div className="flex flex-col select-none">
+    <div className="flex flex-col w-full max-w-full overflow-x-hidden select-none">
       
       {/* 1. Header */}
       <div className="flex items-center justify-between py-3 mt-2.5">
@@ -249,7 +249,7 @@ export default function MobileHomeScreen() {
       </div>
 
       {/* 2. Gold Wallet Balance Card */}
-      <div className="relative overflow-hidden rounded-[24px] px-5 py-5 my-3 text-white bg-gradient-to-br from-amber-500 via-amber-500 to-amber-600 shadow-[0_8px_16px_rgba(234,179,8,0.3)] select-none">
+      <div className="relative overflow-hidden rounded-[22px] px-4 py-4 my-2 text-white bg-gradient-to-br from-amber-500 via-amber-500 to-amber-600 shadow-[0_8px_16px_rgba(234,179,8,0.3)] select-none w-full">
         {/* Decorative background circles */}
         <div className="absolute w-[200px] h-[200px] rounded-full bg-white/[0.06] -top-[60px] -right-[60px] pointer-events-none" />
         <div className="absolute w-[130px] h-[130px] rounded-full bg-white/[0.05] -bottom-[30px] -left-[30px] pointer-events-none" />
@@ -288,49 +288,49 @@ export default function MobileHomeScreen() {
         <div className="h-[1px] bg-white/20 my-3.5 relative z-10" />
 
         {/* Quick action buttons */}
-        <div className="flex justify-between relative z-10">
+        <div className="flex justify-between items-start relative z-10 gap-1">
           {/* Add Money */}
           <button
             onClick={() => router.push('/dashboard/virtual_accounts')}
-            className="flex flex-col items-center flex-1 cursor-pointer group"
+            className="flex flex-col items-center flex-1 min-w-0 cursor-pointer"
           >
-            <div className="w-[42px] h-[42px] rounded-full bg-white flex items-center justify-center mb-1.5 shadow-sm">
-              <Plus className="w-5 h-5 text-amber-700 font-bold" />
+            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center mb-1 shadow-sm">
+              <Plus className="w-4 h-4 text-amber-700 font-bold" />
             </div>
-            <span className="text-[11px] font-semibold text-white/90">Add Money</span>
+            <span className="text-[10px] font-semibold text-white/90 text-center leading-tight">Add Money</span>
           </button>
 
           {/* Send */}
           <button
             onClick={() => router.push('/dashboard/actions/transfer')}
-            className="flex flex-col items-center flex-1 cursor-pointer group"
+            className="flex flex-col items-center flex-1 min-w-0 cursor-pointer"
           >
-            <div className="w-[42px] h-[42px] rounded-full bg-white flex items-center justify-center mb-1.5 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center mb-1 shadow-sm">
               <Send className="w-4 h-4 text-amber-700" />
             </div>
-            <span className="text-[11px] font-semibold text-white/90">Send</span>
+            <span className="text-[10px] font-semibold text-white/90 text-center leading-tight">Send</span>
           </button>
 
           {/* Receive */}
           <button
             onClick={() => router.push('/dashboard/virtual_accounts')}
-            className="flex flex-col items-center flex-1 cursor-pointer group"
+            className="flex flex-col items-center flex-1 min-w-0 cursor-pointer"
           >
-            <div className="w-[42px] h-[42px] rounded-full bg-white flex items-center justify-center mb-1.5 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center mb-1 shadow-sm">
               <QrCode className="w-4 h-4 text-amber-700" />
             </div>
-            <span className="text-[11px] font-semibold text-white/90">Receive</span>
+            <span className="text-[10px] font-semibold text-white/90 text-center leading-tight">Receive</span>
           </button>
 
           {/* More */}
           <button
             onClick={() => router.push('/dashboard/virtual_accounts')}
-            className="flex flex-col items-center flex-1 cursor-pointer group"
+            className="flex flex-col items-center flex-1 min-w-0 cursor-pointer"
           >
-            <div className="w-[42px] h-[42px] rounded-full bg-white flex items-center justify-center mb-1.5 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center mb-1 shadow-sm">
               <MoreHorizontal className="w-4 h-4 text-amber-700" />
             </div>
-            <span className="text-[11px] font-semibold text-white/90">More</span>
+            <span className="text-[10px] font-semibold text-white/90 text-center leading-tight">More</span>
           </button>
         </div>
       </div>

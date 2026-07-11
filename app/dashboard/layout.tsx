@@ -180,14 +180,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Dynamic Route Content */}
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        <main
+          className="flex-1 px-4 pt-3 pb-4 md:p-8 overflow-y-auto overflow-x-hidden w-full max-w-full"
+          style={{ contain: 'layout style', maxWidth: '100vw' }}
+        >
           {children}
         </main>
       </div>
 
       {/* 2. Mobile Bottom Navigation Tab Bar */}
       {isMainTab && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.06)] flex items-center justify-around h-[62px] px-2 pb-safe">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.06)] flex items-center justify-around" style={{ height: 'calc(62px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: '8px', paddingRight: '8px' }}>
           {TABS.filter(t => t.id !== 'crypto' && t.id !== 'kyc').map((tab) => {
             const isActive = pathname === tab.href;
             const Icon = tab.icon;
