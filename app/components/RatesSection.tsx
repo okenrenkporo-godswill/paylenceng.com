@@ -80,7 +80,7 @@ export default function RatesSection() {
         <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
 
-        <div className="flex w-max gap-3 animate-[marquee_25s_linear_infinite] hover:[animation-play-state:paused]">
+        <div className="flex w-max gap-3 animate-[marquee_60s_linear_infinite] hover:[animation-play-state:paused]">
           {tickerItems.map((item, index) => {
             const coinStyle = getCoinStyle(item.symbol);
             const isUp = item.changeType === 'up';
