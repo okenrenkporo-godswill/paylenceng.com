@@ -8,6 +8,7 @@ import BalanceCard from '../../components/BalanceCard';
 import RatesSection from '../../components/RatesSection';
 import QuickActions from '../../components/QuickActions';
 import VirtualCardBanner from '../../components/VirtualCardBanner';
+import MobileHomeScreen from '../../components/MobileHomeScreen';
 import { QrCode, Bell, ShieldAlert, ShieldCheck, ShieldAlert as ShieldWarning, TrendingUp, ArrowUpRight, ArrowDownLeft, Phone, Tv, Zap, RefreshCw, Smartphone } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -113,115 +114,123 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto">
-      
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-text-primary">Hello, {firstName} 👋</h2>
-            <div className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badgeDetails.bgColor} ${badgeDetails.textColor}`}>
-              <BadgeIcon className="w-3 h-3" />
-              <span>{badgeDetails.text}</span>
+    <>
+      {/* Mobile view - Exact recreation of Expo HomeScreen */}
+      <div className="block md:hidden">
+        <MobileHomeScreen />
+      </div>
+
+      {/* Desktop view */}
+      <div className="hidden md:block flex flex-col gap-6 max-w-4xl mx-auto">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold text-text-primary">Hello, {firstName} 👋</h2>
+              <div className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badgeDetails.bgColor} ${badgeDetails.textColor}`}>
+                <BadgeIcon className="w-3 h-3" />
+                <span>{badgeDetails.text}</span>
+              </div>
+            </div>
+            <span className="text-xs text-text-muted mt-1">{userProfile?.email}</span>
+          </div>
+
+          {/* Qr & Notifications buttons */}
+          <div className="flex items-center gap-2.5">
+            <button 
+              onClick={() => router.push('/dashboard/profile')}
+              className="w-10 h-10 rounded-full border border-border bg-surface flex items-center justify-center text-text-primary hover:border-primary/20 transition-all cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.01)]"
+            >
+              <QrCode className="w-5 h-5" />
+            </button>
+            
+            <button 
+              onClick={() => router.push('/dashboard/profile')}
+              className="w-10 h-10 rounded-full border border-border bg-surface flex items-center justify-center text-text-primary hover:border-primary/20 transition-all cursor-pointer relative shadow-[0_2px_8px_rgba(0,0,0,0.01)]"
+            >
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-danger rounded-full" />
+            </button>
+          </div>
+        </div>
+
+        {/* Balance Card */}
+        <BalanceCard
+          balance={balance}
+          userName={firstName}
+          onSendPress={() => router.push('/dashboard/actions/transfer')}
+          onAddMoneyPress={() => router.push('/dashboard/virtual_accounts')}
+          onReceivePress={() => router.push('/dashboard/virtual_accounts')}
+          onMorePress={() => router.push('/dashboard/virtual_accounts')}
+        />
+
+        {/* Wealth Banner */}
+        <div 
+          onClick={() => router.push('/dashboard/wealth')}
+          className="flex items-center justify-between p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 hover:border-amber-500/30 transition-all cursor-pointer"
+        >
+          <div className="flex items-center gap-2.5 text-text-primary">
+            <TrendingUp className="w-4.5 h-4.5 text-primary" />
+            <span className="text-xs font-bold text-text-secondary">
+              Earn up to 18% p.a. — Paylence Save & Wealth
+            </span>
+          </div>
+          <span className="text-xs text-text-muted">➔</span>
+        </div>
+
+        {/* Crypto Rates Ticker */}
+        <RatesSection />
+
+        {/* Quick Actions Grid */}
+        <QuickActions onActionPress={handleActionTrigger} />
+
+        {/* Recent Transactions list */}
+        {recentTx.length > 0 && (
+          <div className="bg-surface border border-border rounded-3xl p-5 shadow-[0_4px_16px_rgba(0,0,0,0.01)]">
+            <h4 className="text-sm font-extrabold text-text-primary mb-3">Recent Transactions</h4>
+            
+            <div className="divide-y divide-border/40">
+              {recentTx.map((tx) => {
+                const txStyle = getTxIcon(tx.type);
+                const TxIcon = txStyle.icon;
+                const isCredit = tx.type === 'Deposit' || tx.type === 'Transfer Received';
+
+                return (
+                  <div key={tx.id} className="flex items-center py-3.5 gap-4">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${txStyle.bg} ${txStyle.color}`}>
+                      <TxIcon className="w-5 h-5" />
+                    </div>
+                    
+                    <div className="flex-1 overflow-hidden">
+                      <h5 className="text-xs font-bold text-text-primary truncate">{tx.title}</h5>
+                      <span className="text-[10px] text-text-muted mt-1 block">{tx.date}</span>
+                    </div>
+
+                    <div className="text-right flex flex-col items-end gap-1">
+                      <span className={`text-xs font-black ${
+                        isCredit ? 'text-emerald-500' : 'text-text-primary'
+                      }`}>
+                        {isCredit ? '+' : '-'}₦{tx.amount.toLocaleString('en-NG', { minimumFractionDigits: 2 })}
+                      </span>
+                      <div className={`w-1.5 h-1.5 rounded-full ${
+                        tx.status === 'Completed' ? 'bg-emerald-500' : tx.status === 'Pending' ? 'bg-amber-500' : 'bg-danger'
+                      }`} />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
-          <span className="text-xs text-text-muted mt-1">{userProfile?.email}</span>
-        </div>
+        )}
 
-        {/* Qr & Notifications buttons */}
-        <div className="flex items-center gap-2.5">
-          <button 
-            onClick={() => router.push('/dashboard/profile')}
-            className="w-10 h-10 rounded-full border border-border bg-surface flex items-center justify-center text-text-primary hover:border-primary/20 transition-all cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.01)]"
-          >
-            <QrCode className="w-5 h-5" />
-          </button>
-          
-          <button 
-            onClick={() => router.push('/dashboard/profile')}
-            className="w-10 h-10 rounded-full border border-border bg-surface flex items-center justify-center text-text-primary hover:border-primary/20 transition-all cursor-pointer relative shadow-[0_2px_8px_rgba(0,0,0,0.01)]"
-          >
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-danger rounded-full" />
-          </button>
-        </div>
+        {/* Virtual Cards Banner */}
+        <VirtualCardBanner 
+          onApplyPress={() => router.push('/dashboard/cards')}
+          onBetPress={() => router.push('/dashboard/actions/bet')}
+        />
+
       </div>
-
-      {/* Balance Card */}
-      <BalanceCard
-        balance={balance}
-        userName={firstName}
-        onSendPress={() => router.push('/dashboard/actions/transfer')}
-        onAddMoneyPress={() => router.push('/dashboard/virtual_accounts')}
-        onReceivePress={() => router.push('/dashboard/virtual_accounts')}
-        onMorePress={() => router.push('/dashboard/virtual_accounts')}
-      />
-
-      {/* Wealth Banner */}
-      <div 
-        onClick={() => router.push('/dashboard/wealth')}
-        className="flex items-center justify-between p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 hover:border-amber-500/30 transition-all cursor-pointer"
-      >
-        <div className="flex items-center gap-2.5 text-text-primary">
-          <TrendingUp className="w-4.5 h-4.5 text-primary" />
-          <span className="text-xs font-bold text-text-secondary">
-            Earn up to 18% p.a. — Paylence Save & Wealth
-          </span>
-        </div>
-        <span className="text-xs text-text-muted">➔</span>
-      </div>
-
-      {/* Crypto Rates Ticker */}
-      <RatesSection />
-
-      {/* Quick Actions Grid */}
-      <QuickActions onActionPress={handleActionTrigger} />
-
-      {/* Recent Transactions list */}
-      {recentTx.length > 0 && (
-        <div className="bg-surface border border-border rounded-3xl p-5 shadow-[0_4px_16px_rgba(0,0,0,0.01)]">
-          <h4 className="text-sm font-extrabold text-text-primary mb-3">Recent Transactions</h4>
-          
-          <div className="divide-y divide-border/40">
-            {recentTx.map((tx) => {
-              const txStyle = getTxIcon(tx.type);
-              const TxIcon = txStyle.icon;
-              const isCredit = tx.type === 'Deposit' || tx.type === 'Transfer Received';
-
-              return (
-                <div key={tx.id} className="flex items-center py-3.5 gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${txStyle.bg} ${txStyle.color}`}>
-                    <TxIcon className="w-5 h-5" />
-                  </div>
-                  
-                  <div className="flex-1 overflow-hidden">
-                    <h5 className="text-xs font-bold text-text-primary truncate">{tx.title}</h5>
-                    <span className="text-[10px] text-text-muted mt-1 block">{tx.date}</span>
-                  </div>
-
-                  <div className="text-right flex flex-col items-end gap-1">
-                    <span className={`text-xs font-black ${
-                      isCredit ? 'text-emerald-500' : 'text-text-primary'
-                    }`}>
-                      {isCredit ? '+' : '-'}₦{tx.amount.toLocaleString('en-NG', { minimumFractionDigits: 2 })}
-                    </span>
-                    <div className={`w-1.5 h-1.5 rounded-full ${
-                      tx.status === 'Completed' ? 'bg-emerald-500' : tx.status === 'Pending' ? 'bg-amber-500' : 'bg-danger'
-                    }`} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Virtual Cards Banner */}
-      <VirtualCardBanner 
-        onApplyPress={() => router.push('/dashboard/cards')}
-        onBetPress={() => router.push('/dashboard/actions/bet')}
-      />
-
-    </div>
+    </>
   );
 }
