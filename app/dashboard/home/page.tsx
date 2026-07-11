@@ -121,7 +121,7 @@ export default function HomePage() {
       </div>
 
       {/* Desktop view */}
-      <div className="hidden md:block flex flex-col gap-6 max-w-4xl mx-auto">
+      <div className="hidden md:flex flex-col gap-6 max-w-4xl mx-auto">
         
         {/* Header */}
         <div className="flex items-center justify-between">
