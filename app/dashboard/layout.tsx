@@ -4,8 +4,33 @@ import React from 'react';
 import { useAuth } from '../context/AuthProvider';
 import { useTheme } from '../context/ThemeContext';
 import { useRouter, usePathname } from 'next/navigation';
-import { Home, TrendingUp, CreditCard, User, LogOut, ShieldAlert, Coins } from 'lucide-react';
+import { Home, TrendingUp, CreditCard, User, LogOut, ShieldAlert, Coins, ArrowLeft, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+const mainTabRoutes = [
+  '/dashboard/home',
+  '/dashboard/wealth',
+  '/dashboard/cards',
+  '/dashboard/profile'
+];
+
+function getSubpageTitle(pathname: string) {
+  if (pathname.includes('/dashboard/kyc')) return 'KYC Verification';
+  if (pathname.includes('/dashboard/crypto')) return 'Paylence Crypto';
+  if (pathname.includes('/dashboard/virtual_accounts')) return 'Virtual Accounts';
+  if (pathname.includes('/dashboard/actions/transfer')) return 'Transfer';
+  if (pathname.includes('/dashboard/actions/withdraw')) return 'Withdraw';
+  if (pathname.includes('/dashboard/actions/paylence_transfer')) return 'Send to Paylence';
+  if (pathname.includes('/dashboard/actions/giftcard')) return 'Gift Cards';
+  if (pathname.includes('/dashboard/actions/topup')) return 'Airtime Top-up';
+  if (pathname.includes('/dashboard/actions/cable')) return 'Cable TV';
+  if (pathname.includes('/dashboard/actions/electricity')) return 'Electricity';
+  if (pathname.includes('/dashboard/actions/bet')) return 'Betting Top-up';
+  if (pathname.includes('/dashboard/actions/refer')) return 'Refer & Earn';
+  
+  const segment = pathname.split('/').pop() || '';
+  return segment.charAt(0).toUpperCase() + segment.slice(1).replace('_', ' ');
+}
 
 const TABS = [
   { id: 'home', label: 'Home', href: '/dashboard/home', icon: Home },
@@ -21,6 +46,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
+  const isMainTab = mainTabRoutes.includes(pathname);
 
   if (isLoading) {
     return (
@@ -111,8 +137,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main Content Pane */}
-      <div className="flex-1 flex flex-col relative pb-20 md:pb-0">
+      <div className={`flex-1 flex flex-col relative ${isMainTab ? 'pb-[62px]' : 'pb-0'} md:pb-0`}>
         
+        {/* Mobile Header for Subpages */}
+        {!isMainTab && (
+          <div className="md:hidden">
+            <header className="flex items-center justify-between px-4 h-[58px] border-b border-border bg-surface sticky top-0 z-40">
+              <button 
+                onClick={() => router.back()}
+                className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-surface-elevated flex items-center justify-center text-text-primary hover:scale-95 transition-transform cursor-pointer shrink-0"
+              >
+                <ArrowLeft className="w-4.5 h-4.5" />
+              </button>
+              
+              <div className="flex-1 pl-3 text-left">
+                <h2 className="text-[15px] font-extrabold text-text-primary leading-tight">
+                  {getSubpageTitle(pathname)}
+                </h2>
+                <span className="text-[10px] text-text-muted mt-0.5 block">
+                  Paylence Account
+                </span>
+              </div>
+
+              <button className="p-1 text-text-muted hover:text-text-primary transition-colors cursor-pointer shrink-0">
+                <HelpCircle className="w-5.5 h-5.5" />
+              </button>
+            </header>
+            <div className="h-[2.5px] bg-primary/35 w-full" />
+          </div>
+        )}
+
         {/* Desktop Topbar */}
         <header className="hidden md:flex items-center justify-between px-8 py-4 border-b border-border bg-surface/40 backdrop-blur-md sticky top-0 z-40">
           <h1 className="text-lg font-bold capitalize text-text-primary">
@@ -132,39 +186,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       {/* 2. Mobile Bottom Navigation Tab Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.06)] flex items-center justify-around h-[66px] px-2">
-        {TABS.map((tab) => {
-          const isActive = pathname === tab.href;
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => router.push(tab.href)}
-              className="flex flex-col items-center justify-center flex-1 h-full relative"
-            >
-              {/* Active bar decoration */}
-              {isActive && (
-                <motion.div
-                  layoutId="activePill"
-                  className="absolute top-0 w-8 h-0.5 bg-primary"
-                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                />
-              )}
-              
-              <div className={`p-1.5 rounded-xl transition-colors ${
-                isActive ? 'bg-primary-light text-primary animate-pulse-subtle' : 'text-text-muted'
-              }`}>
-                <Icon className="w-5 h-5 shrink-0" />
-              </div>
-              <span className={`text-[10px] mt-0.5 font-medium transition-colors ${
-                isActive ? 'text-primary font-bold' : 'text-text-muted'
-              }`}>
-                {tab.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      {isMainTab && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.06)] flex items-center justify-around h-[62px] px-2 pb-safe">
+          {TABS.filter(t => t.id !== 'crypto' && t.id !== 'kyc').map((tab) => {
+            const isActive = pathname === tab.href;
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => router.push(tab.href)}
+                className="flex flex-col items-center justify-center flex-1 h-full relative pt-1.5"
+              >
+                {/* Active pill indicator above the icon */}
+                <div className={`absolute top-0 w-6 h-0.5 rounded-b-sm transition-colors ${
+                  isActive ? 'bg-primary' : 'bg-transparent'
+                }`} />
+                
+                <div className={`w-10 h-7 rounded-xl flex items-center justify-center transition-colors ${
+                  isActive ? 'bg-primary-light text-primary' : 'text-text-muted'
+                }`}>
+                  <Icon className="w-5.5 h-5.5 shrink-0" />
+                </div>
+                <span className={`text-[10px] mt-0.5 font-medium transition-colors ${
+                  isActive ? 'text-primary font-bold' : 'text-text-muted'
+                }`}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
     </div>
   );
