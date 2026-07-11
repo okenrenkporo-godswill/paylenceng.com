@@ -13,6 +13,7 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (payload: Record<string, any>) => Promise<any>;
   signup: (payload: Record<string, any>) => Promise<any>;
+  verifyOtp: (email: string, token: string) => Promise<any>;
   logout: () => Promise<void>;
   syncWithBackend: () => Promise<void>;
   setBalance: React.Dispatch<React.SetStateAction<number>>;
@@ -105,6 +106,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return await apiClient.signup(payload);
   };
 
+  const verifyOtp = async (email: string, token: string) => {
+    const data = await apiClient.verifyOtp(email, token);
+    setIsLoggedIn(true);
+    await syncWithBackend();
+    router.push('/dashboard/home');
+    return data;
+  };
+
   const logout = async () => {
     try {
       await apiClient.logout();
@@ -129,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         signup,
+        verifyOtp,
         logout,
         syncWithBackend,
         setBalance,

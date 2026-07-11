@@ -7,11 +7,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, Phone, Award, Shield, Fingerprint, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Button, Input, Checkbox } from '../components/UI';
 import { safeStorage } from '../utils/storage';
+import apiClient from '../services/api';
 
-type AuthStep = 'splash' | 'login' | 'signup_1' | 'signup_2';
+type AuthStep = 'splash' | 'login' | 'signup_1' | 'signup_2' | 'otp_verify';
 
 export default function AuthPage() {
-  const { login, signup, isLoggedIn } = useAuth();
+  const { login, signup, verifyOtp, isLoggedIn } = useAuth();
   const { colors, isDark } = useTheme();
   const [step, setStep] = useState<AuthStep>('splash');
   
@@ -20,12 +21,17 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
   const [phone, setPhone] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(true);
   
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // OTP states
+  const [otpToken, setOtpToken] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   // Toast / alert state
   const [alertMsg, setAlertMsg] = useState<{ type: 'error' | 'success' | 'info'; text: string } | null>(null);
@@ -138,6 +144,14 @@ export default function AuthPage() {
     }
   };
 
+  // Resend cooldown timer effect
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isEmailValid(email)) {
@@ -155,17 +169,54 @@ export default function AuthPage() {
 
     try {
       setIsLoading(true);
-      triggerToast('Creating account...', 'info');
-      await signup({ email, password, firstName, lastName, phone, referralCode });
+      triggerToast('Sending verification code...', 'info');
+      await signup({ email, password, firstName, lastName, username, phone, referralCode });
       
-      // Login automatically on signup success
-      await login({ email, password });
+      setResendCooldown(60);
+      setStep('otp_verify');
+      triggerToast('A 6-digit verification code has been sent to your email!', 'success');
+    } catch (err: any) {
+      triggerToast(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpToken.length !== 6) {
+      triggerToast('Please enter a 6-digit verification code.');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      triggerToast('Verifying code...', 'info');
+      await verifyOtp(email, otpToken);
+      
+      // Save credentials for future biometrics check
       await safeStorage.setItemAsync('paylence_email', email);
       await safeStorage.setItemAsync('paylence_password', password);
       
       triggerToast('Account created successfully!', 'success');
     } catch (err: any) {
-      triggerToast(err.message || 'Registration failed. Please try again.');
+      triggerToast(err.message || 'Verification failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    try {
+      setIsLoading(true);
+      triggerToast('Resending code...', 'info');
+      await apiClient.resendOtp(email);
+      setResendCooldown(60);
+      setOtpToken('');
+      triggerToast('A new verification code has been sent!', 'success');
+    } catch (err: any) {
+      triggerToast(err.message || 'Resend failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -185,12 +236,12 @@ export default function AuthPage() {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
-            className={`absolute top-6 left-4 right-4 md:left-auto md:right-6 md:w-[350px] z-50 flex items-center gap-3 px-4 py-3.5 rounded-xl shadow-lg border text-white ${
+            className={`absolute top-6 left-4 right-4 md:left-auto md:right-6 md:w-[350px] z-50 flex items-center gap-3 px-4 py-3.5 rounded-xl shadow-lg border ${
               alertMsg.type === 'success' 
                 ? 'bg-success text-white border-success/20' 
                 : alertMsg.type === 'info'
-                ? 'bg-info text-white border-info/20'
-                : 'bg-danger text-white border-danger/20'
+                ? 'bg-primary text-[#040712] border-primary/20'
+                : 'bg-primary text-[#040712] border-primary/20'
             }`}
           >
             {alertMsg.type === 'success' ? (
@@ -460,6 +511,20 @@ export default function AuthPage() {
               />
 
               <Input
+                label="Username"
+                placeholder="johndoe"
+                labelPlacement="outside"
+                startContent={<User className="w-4 h-4 text-text-muted" />}
+                value={username}
+                onValueChange={setUsername}
+                variant="bordered"
+                classNames={{
+                  inputWrapper: "border-border hover:border-primary focus-within:border-primary bg-input-bg h-12 rounded-xl",
+                  label: "text-text-secondary font-bold text-xs uppercase tracking-wider"
+                }}
+              />
+
+              <Input
                 label="Password"
                 placeholder="Choose password (min 6 chars)"
                 labelPlacement="outside"
@@ -522,6 +587,76 @@ export default function AuthPage() {
                 </Button>
               </div>
             </form>
+          </motion.div>
+        )}
+
+        {/* Step: OTP Verify */}
+        {step === 'otp_verify' && (
+          <motion.div
+            key="otp_verify"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, y: -100 }}
+            className="w-full max-w-[420px] bg-surface border border-border p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+          >
+            <div className="flex flex-col items-center text-center mb-8">
+              <div className="w-16 h-16 rounded-2xl bg-primary-light flex items-center justify-center text-primary mb-4">
+                <Shield className="w-8 h-8 text-primary animate-pulse" />
+              </div>
+              <h2 className="text-2xl font-bold text-text-primary">Verify Email</h2>
+              <p className="text-sm text-text-muted mt-1">We sent a 6-digit verification code to <span className="text-primary font-semibold">{email}</span></p>
+            </div>
+
+            <form onSubmit={handleVerifyOtp} className="space-y-6">
+              <Input
+                label="Verification Code"
+                placeholder="123456"
+                labelPlacement="outside"
+                startContent={<Lock className="w-4 h-4 text-text-muted" />}
+                maxLength={6}
+                value={otpToken}
+                onValueChange={(val) => setOtpToken(val.replace(/\D/g, '').slice(0, 6))}
+                variant="bordered"
+                classNames={{
+                  inputWrapper: "border-border hover:border-primary focus-within:border-primary bg-input-bg h-12 rounded-xl text-center text-lg tracking-[0.5em] font-extrabold",
+                  label: "text-text-secondary font-bold text-xs uppercase tracking-wider"
+                }}
+              />
+
+              <div className="flex flex-col gap-3 pt-2">
+                <Button
+                  type="submit"
+                  isLoading={isLoading}
+                  className="w-full h-12 rounded-xl font-bold text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-md shadow-amber-500/20"
+                >
+                  Verify Code
+                </Button>
+
+                <Button
+                  type="button"
+                  onPress={handleResendOtp}
+                  disabled={resendCooldown > 0 || isLoading}
+                  variant="bordered"
+                  className={`w-full h-12 rounded-xl font-bold border-border transition-colors flex items-center justify-center gap-2 ${
+                    resendCooldown > 0 
+                      ? 'text-text-muted bg-input-bg border-none' 
+                      : 'text-text-primary hover:border-primary'
+                  }`}
+                >
+                  {resendCooldown > 0 ? `Resend Code (${resendCooldown}s)` : 'Resend Code'}
+                </Button>
+              </div>
+            </form>
+
+            <div className="text-center mt-6 text-sm">
+              <span className="text-text-muted">Entered the wrong email? </span>
+              <button
+                onClick={() => setStep('signup_2')}
+                className="text-primary font-bold hover:underline"
+              >
+                Change Email
+              </button>
+            </div>
           </motion.div>
         )}
 

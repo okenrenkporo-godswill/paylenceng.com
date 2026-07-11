@@ -1,6 +1,8 @@
 import { Transaction, CryptoRate, CryptoMarketCoin } from '../types/wallet';
 
-export const API_BASE_URL = "https://fintech-1-xynq.onrender.com";
+export const API_BASE_URL = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? "http://localhost:8000"
+  : "https://fintech-1-xynq.onrender.com";
 
 class ApiClient {
   private baseUrl: string = API_BASE_URL;
@@ -123,9 +125,29 @@ class ApiClient {
         password: payload.password,
         first_name: payload.firstName,
         last_name: payload.lastName,
+        username: payload.username,
         phone: payload.phone,
         referral_code: payload.referralCode,
       }),
+    });
+  }
+
+  async verifyOtp(email: string, token: string) {
+    const data = await this.request('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, token }),
+    });
+    if (data?.access_token) {
+      this.setToken(data.access_token);
+      this.setActiveEmail(email);
+    }
+    return data;
+  }
+
+  async resendOtp(email: string) {
+    return await this.request('/auth/resend-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
     });
   }
 
